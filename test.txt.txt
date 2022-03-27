@@ -1,0 +1,135 @@
+Test 1:
+1. start server
+2. start client x(the table should be sent from server to x)
+3. start client y(the table should be sent from server to x and y)
+4. start client z(the table should be sent from server to x and y and z)
+5. chat x -> y, y->z, ... , x ->z (All combinations)
+6. dereg x (the table should be sent to y, z. x should receive ’ack’)
+7. chat y->x (this should fail and message should be sent to server, and message has to be saved for x in the
+server)
+8. chat z->x (same as above)
+9. reg x (messages should be sent from server to x, x’s status has to be broadcasted to all the other clients)
+10. x, y, z : exit
+
+
+Result:
+
+Client1 : user1
+
+$ python3 ChatApp.py -c user1 10.150.0.2 8001 9001
+>>> [Client Table Updated]
+>>> [Client Table Updated]
+>>> send user2 hello nice to meet you.
+>>> [Message has been received by user2.]
+>>> send user3 hi!
+>>> [Message has been received by user3.]
+>>> user2 : hello, nice to meet you, too!
+>>> user3 : hi~
+>>> dereg user1
+>>> [You are now offline. Bye.]
+>>> reg user1
+>>> [You have message]
+>>> (1648153596.7672942) user2 : hello?
+>>> (1648153615.750366) user3 : are you still there?
+>>> ^CCaught keyboard interrupt. Exiting
+
+Client2 : user2
+
+$ python3 ChatApp.py -c user2 10.150.0.2 8001 9101
+>>> [Client Table Updated]
+>>> user1 : hello nice to meet you.
+>>> send user1 hello, nice to meet you, too!
+>>> [Message has been received by user1.]
+>>> send user3 hello
+>>> [Message has been received by user3.]
+>>> user3 : hello!
+>>> [Client Table Updated]
+>>> send user1 hello?
+>>> [No ACK from user1, message sent to server.]
+>>> [Messages received by the server and saved.]
+>>> ^CCaught keyboard interrupt. Exiting
+
+Client3 : user3 
+
+$ python3 ChatApp.py -c user3 10.150.0.2 8001 9201
+>>> user1 : hi!
+>>> user2 : hello
+>>> send user1 hi~
+>>> [Message has been received by user1.]
+>>> send user2 hello!
+>>> [Message has been received by user2.]
+>>> [Client Table Updated]
+>>> send user1 are you still there?
+>>> [No ACK from user1, message sent to server.]
+>>> [Messages received by the server and saved.]
+>>> ^CCaught keyboard interrupt. Exiting
+
+
+Test2:
+1. start server
+2. start client x (the table should be sent from server to x )
+3. start client y (the table should be sent from server to x and y)
+4. dereg y
+5. server exit
+6. send message x-> y (will fail with both y and server, so should make 5 attempts and exit)
+
+
+Result:
+
+Client1 : user1
+
+$ python3 ChatApp.py -c user1 10.150.0.2 8013 9013
+>>> [Client Table Updated]
+>>> [Client Table Updated]
+>>> send user2 hi
+>>> [No ACK from user2, message sent to server.]
+>>> [Message sent failed]
+>>> [Server is shut down]
+>>> [Exiting]
+>>>
+
+Client: user2
+
+$ python3 ChatApp.py -c user2 10.150.0.2 8013 9113
+>>> dereg user2
+>>> [You are now offline. Bye.]
+>>>
+
+
+Test3:
+1. start server
+2. start client x (the table should be sent from server to x )
+3. start client y (the table should be sent from server to x and y)
+4. start client z (the table should be sent from server to x , y and z)
+5. send group message x-> y,z
+6. client2 exit
+7. send group message x-> y,z
+
+Result:
+
+Client1: user1
+
+$ python3 ChatApp.py -c user1 10.150.0.2 8014 9014
+>>> [Client Table Updated]
+>>> [Client Table Updated]
+>>> send_all hello guys
+>>> [Message received by the server.]
+/* shut down client2 */
+>>> send_all hi
+>>> [Client Table Updated]
+>>>
+
+Client2: user2
+
+$ python3 ChatApp.py -c user2 10.150.0.2 8014 9114
+>>> [Client Table Updated]
+>>> Channel_Message user1 : hello guys
+>>> ^CCaught keyboard interrupt. Exiting
+
+Client3: user3
+
+$ python3 ChatApp.py -c user3 10.150.0.2 8014 9214
+>>> Channel_Message user1 : hello guys
+>>> Channel_Message user1 : hi
+>>> [Client Table Updated]
+>>>
